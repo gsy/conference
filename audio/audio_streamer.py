@@ -9,7 +9,8 @@ import os
 import readline
 
 # To the laptop that will catch everything
-REMOTE_HOST = "192.168.33.153"
+# REMOTE_HOST = "192.168.33.153"
+REMOTE_HOST = "127.0.0.1"
 WRITE_AUDIO_CAPS = "audio.caps"
 
 mainloop = gobject.MainLoop()
@@ -18,7 +19,12 @@ bus = pipeline.get_bus()
 
 # alsasrc = gst.element_factory_make("autoaudiosrc")
 alsasrc = gst.element_factory_make("alsasrc")
-alsasrc.set_property('device', 'plughw:1,0')
+# alsasrc.set_property('device', 'plughw:1,0')
+
+caps = gst.Caps("audio/x-raw-int, rate=22000, channels=1, width=16, depth=16")
+capsfilter = gst.element_factory_make("capsfilter", "audio_capsfilter")
+capsfilter.props.caps = caps
+
 q1 = gst.element_factory_make("queue", "q1")
 q2 = gst.element_factory_make("queue", "q2")
 audioconvert1 = gst.element_factory_make("audioconvert")
@@ -39,7 +45,7 @@ udpsrc_rtcpin.set_property('port', 11002)
 rtpbin = gst.element_factory_make('gstrtpbin', 'gstrtpbin')
 
 # Add elements
-pipeline.add(alsasrc, q1, audioconvert1, audioconvert2, vorbisenc, rtpvorbispay, rtpbin, udpsink_rtpout, udpsink_rtcpout, udpsrc_rtcpin)
+pipeline.add(alsasrc, capsfilter, q1, audioconvert1, audioconvert2, vorbisenc, rtpvorbispay, rtpbin, udpsink_rtpout, udpsink_rtcpout, udpsrc_rtcpin)
 
 # Link them
 alsasrc.link(audioconvert1)
